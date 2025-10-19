@@ -13,7 +13,13 @@ import IdeaWall from "./pages/IdeaWall";
 import Notifications from "./pages/Notifications";
 import Resources from "./pages/Resources";
 import Contact from "./pages/Contact";
+import AdminLogin from "./pages/AdminLogin";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminEvents from "./pages/AdminEvents";
+import AdminNotifications from "./pages/AdminNotifications";
+import AdminResources from "./pages/AdminResources";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRoute
 
 const queryClient = new QueryClient();
 
@@ -33,6 +39,15 @@ const App = () => (
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/resources" element={<Resources />} />
           <Route path="/contact" element={<Contact />} />
+          {/* Admin Login Route (not protected) */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          {/* Protected Admin Routes */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/events" element={<AdminEvents />} />
+            <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/resources" element={<AdminResources />} />
+          </Route>
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
