@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,40 +14,83 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
 const IdeaWall = () => {
-  const [ideas, setIdeas] = useState([
-    {
-      id: 1,
-      title: "AI-Powered Study Assistant",
-      description:
-        "Create an AI chatbot to help students with their coursework and assignments using Google's AI models.",
-      author: "Sarah Chen",
-      likes: 24,
-      comments: 8,
-      tags: ["AI", "Education"],
-    },
-    {
-      id: 2,
-      title: "Campus Event App",
-      description:
-        "Mobile app to discover and RSVP to all campus events in one place with calendar integration.",
-      author: "Mike Johnson",
-      likes: 18,
-      comments: 5,
-      tags: ["Mobile", "Events"],
-    },
-    {
-      id: 3,
-      title: "Sustainability Tracker",
-      description:
-        "Web app to track and gamify sustainable practices on campus, with team competitions.",
-      author: "Emma Wilson",
-      likes: 31,
-      comments: 12,
-      tags: ["Web", "Sustainability"],
-    },
-  ]);
+  const [ideas, setIdeas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchIdeas();
+  }, []);
+
+  const fetchIdeas = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/ideas');
+      if (response.ok) {
+        const data = await response.json();
+        setIdeas(data);
+      }
+    } catch (error) {
+      console.error('Error fetching ideas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitIdea = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const title = formData.get('title');
+    const description = formData.get('description');
+    const tags = formData.get('tags');
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to share your idea.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:3000/api/ideas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ title, description, tags }),
+      });
+
+      if (response.ok) {
+        const newIdea = await response.json();
+        setIdeas([newIdea, ...ideas]);
+        toast({
+          title: "Idea Shared!",
+          description: "Your idea has been posted successfully.",
+        });
+        e.target.reset();
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || "Failed to share idea.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting idea:', error);
+      toast({
+        title: "Error",
+        description: "Failed to share idea. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -74,26 +117,31 @@ const IdeaWall = () => {
                   Tell us about your innovative project or concept
                 </DialogDescription>
               </DialogHeader>
-              <form className="space-y-4">
+              <form onSubmit={handleSubmitIdea} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="idea-title">Title</Label>
+                  <Label htmlFor="title">Title</Label>
                   <Input
-                    id="idea-title"
+                    id="title"
+                    name="title"
                     placeholder="Give your idea a catchy title"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="idea-description">Description</Label>
+                  <Label htmlFor="description">Description</Label>
                   <Textarea
-                    id="idea-description"
+                    id="description"
+                    name="description"
                     rows={4}
                     placeholder="Describe your idea in detail..."
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="idea-tags">Tags (comma separated)</Label>
+                  <Label htmlFor="tags">Tags (comma separated)</Label>
                   <Input
-                    id="idea-tags"
+                    id="tags"
+                    name="tags"
                     placeholder="e.g., AI, Web Development, Mobile"
                   />
                 </div>
@@ -126,16 +174,16 @@ const IdeaWall = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-muted-foreground">
-                      by {idea.author}
+                      by {idea.author?.email || 'Anonymous'}
                     </p>
                     <div className="flex items-center gap-4">
                       <Button variant="ghost" size="sm">
                         <ThumbsUp className="h-4 w-4 mr-1" />
-                        {idea.likes}
+                        {idea.likes?.length || 0}
                       </Button>
                       <Button variant="ghost" size="sm">
                         <MessageSquare className="h-4 w-4 mr-1" />
-                        {idea.comments}
+                        {idea.comments?.length || 0}
                       </Button>
                     </div>
                   </div>

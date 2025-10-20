@@ -4,6 +4,7 @@ const cors = require('cors');
 const mongoose = require('mongoose'); // Import mongoose
 const adminRoutes = require('./admin/admin'); // Import admin routes
 const authRoutes = require('./routes/auth'); // Import auth routes
+const ideaRoutes = require('./routes/ideas'); // Import idea routes
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,8 @@ app.use(bodyParser.json());
 app.use('/api/auth', authRoutes);
 // Use admin routes
 app.use('/api/admin', adminRoutes);
+// Use idea routes
+app.use('/api/ideas', ideaRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

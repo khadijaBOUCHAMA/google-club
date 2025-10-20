@@ -1,31 +1,17 @@
-# Admin Section Implementation for Google Club Site
+# TODO: Add Club Collaborators Section and Make Ideas Functional
 
-## Backend Setup
-- [ ] Initialize Express server in backend/
-- [ ] Add authentication middleware for admin login (maite@gmail.com / MIATE)
-- [ ] Create routes for CRUD operations on Events
-- [ ] Create routes for CRUD operations on Notifications
-- [ ] Create routes for CRUD operations on Resources
-- [ ] Add CORS and basic middleware
+## Backend Changes
+- [x] Create Idea model in backend/models/Idea.js
+- [x] Create routes/ideas.js for CRUD operations on ideas
+- [x] Update backend/index.js to include ideas routes
+- [x] Create auth middleware
 
-## Frontend Updates
-- [ ] Update Auth.tsx to include admin login option
-- [ ] Modify Events.tsx to fetch data from backend
-- [ ] Modify Notifications.tsx to fetch data from backend
-- [ ] Modify Resources.tsx to fetch data from backend
-- [ ] Add admin routes in App.tsx
-- [ ] Create AddEvent.tsx page
-- [ ] Create EditEvent.tsx page
-- [ ] Create AddNotification.tsx page
-- [ ] Create EditNotification.tsx page
-- [ ] Create AddResource.tsx page
-- [ ] Create EditResource.tsx page
-- [ ] Add navigation for admin pages (protected routes)
-- [ ] Ensure consistent styling across all admin pages
+## Frontend Changes
+- [x] Update IdeaWall.tsx to fetch ideas from backend on load
+- [x] Update IdeaWall.tsx to post new ideas to backend on form submit
+- [x] Add Collaborators section to Home.tsx after "What We Offer"
+- [x] Implement clickable collaborator cards with dialog showing personal info, ideas, and resources
 
 ## Testing
-- [ ] Test admin login
-- [ ] Test adding/editing events
-- [ ] Test adding/editing notifications
-- [ ] Test adding/editing resources
-- [ ] Verify frontend-backend integration
+- [ ] Test adding new ideas and displaying them
+- [ ] Test collaborators section UI
