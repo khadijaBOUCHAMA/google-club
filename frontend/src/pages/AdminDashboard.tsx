@@ -43,11 +43,7 @@ const AdminDashboard: React.FC = () => {
         verifyAdmin();
     }, [navigate]);
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userRole');
-        navigate('/admin/login');
-    };
+
 
     return (
         <div className="container mx-auto p-6">
@@ -72,14 +68,6 @@ const AdminDashboard: React.FC = () => {
                         <Link to="/admin/resources">
                             <Button className="w-full h-24 text-lg">Manage Resources</Button>
                         </Link>
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex justify-end">
-                        <Button variant="destructive" onClick={handleLogout}>
-                            Logout
-                        </Button>
                     </div>
                 </CardContent>
             </Card>

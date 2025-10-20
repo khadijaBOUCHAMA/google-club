@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const User = require('../models/User'); // Import User model
+const User = require('../models/User');
+const Event = require('../models/Event');
+const Notification = require('../models/Notification');
+const Resource = require('../models/Resource');
 
 // Admin Login
 router.post('/login', async (req, res) => {
@@ -51,61 +53,219 @@ const authenticateAdmin = (req, res, next) => {
     });
 };
 
-// Admin-only routes (example)
+// Admin-only routes
 router.get('/dashboard', authenticateAdmin, (req, res) => {
     res.json({ message: `Welcome to the admin dashboard, ${req.user.email}!` });
 });
 
-// Add Event
-router.post('/events', authenticateAdmin, (req, res) => {
-    const { title, description, date } = req.body;
-    // In a real app, save to database
-    console.log('New Event Added:', { title, description, date });
-    res.status(201).json({ message: 'Event added successfully', event: { title, description, date } });
+// ==================== EVENTS ====================
+// Get all events
+router.get('/events', authenticateAdmin, async (req, res) => {
+    try {
+        const events = await Event.find().sort({ createdAt: -1 });
+        res.json({ events });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
-// Modify Event
-router.put('/events/:id', authenticateAdmin, (req, res) => {
+// Add Event
+router.post('/events', authenticateAdmin, async (req, res) => {
+    const { title, description, date } = req.body;
+    
+    if (!title || !description || !date) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const event = new Event({ title, description, date });
+        await event.save();
+        console.log('New Event Added:', event);
+        res.status(201).json({ message: 'Event added successfully', event });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Update Event
+router.put('/events/:id', authenticateAdmin, async (req, res) => {
     const { id } = req.params;
     const { title, description, date } = req.body;
-    // In a real app, update in database
-    console.log(`Event ${id} Modified:`, { title, description, date });
-    res.json({ message: `Event ${id} updated successfully`, event: { id, title, description, date } });
+    
+    if (!title || !description || !date) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const event = await Event.findByIdAndUpdate(id, { title, description, date }, { new: true });
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        console.log(`Event ${id} Modified:`, event);
+        res.json({ message: 'Event updated successfully', event });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete Event
+router.delete('/events/:id', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const event = await Event.findByIdAndDelete(id);
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        console.log(`Event ${id} Deleted:`, event);
+        res.json({ message: 'Event deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ==================== NOTIFICATIONS ====================
+// Get all notifications
+router.get('/notifications', authenticateAdmin, async (req, res) => {
+    try {
+        const notifications = await Notification.find().sort({ createdAt: -1 });
+        res.json({ notifications });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 // Add Notification
-router.post('/notifications', authenticateAdmin, (req, res) => {
+router.post('/notifications', authenticateAdmin, async (req, res) => {
     const { message, type } = req.body;
-    // In a real app, save to database
-    console.log('New Notification Added:', { message, type });
-    res.status(201).json({ message: 'Notification added successfully', notification: { message, type } });
+    
+    if (!message || !type) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const notification = new Notification({ message, type });
+        await notification.save();
+        console.log('New Notification Added:', notification);
+        res.status(201).json({ message: 'Notification added successfully', notification });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
-// Modify Notification
-router.put('/notifications/:id', authenticateAdmin, (req, res) => {
+// Update Notification
+router.put('/notifications/:id', authenticateAdmin, async (req, res) => {
     const { id } = req.params;
     const { message, type } = req.body;
-    // In a real app, update in database
-    console.log(`Notification ${id} Modified:`, { message, type });
-    res.json({ message: `Notification ${id} updated successfully`, notification: { id, message, type } });
+    
+    if (!message || !type) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const notification = await Notification.findByIdAndUpdate(id, { message, type }, { new: true });
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+        console.log(`Notification ${id} Modified:`, notification);
+        res.json({ message: 'Notification updated successfully', notification });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// Delete Notification
+router.delete('/notifications/:id', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const notification = await Notification.findByIdAndDelete(id);
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+        console.log(`Notification ${id} Deleted:`, notification);
+        res.json({ message: 'Notification deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// ==================== RESOURCES ====================
+// Get all resources
+router.get('/resources', authenticateAdmin, async (req, res) => {
+    try {
+        const resources = await Resource.find().sort({ createdAt: -1 });
+        res.json({ resources });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
 // Add Resource
-router.post('/resources', authenticateAdmin, (req, res) => {
+router.post('/resources', authenticateAdmin, async (req, res) => {
     const { name, url, category } = req.body;
-    // In a real app, save to database
-    console.log('New Resource Added:', { name, url, category });
-    res.status(201).json({ message: 'Resource added successfully', resource: { name, url, category } });
+    
+    if (!name || !url || !category) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const resource = new Resource({ name, url, category });
+        await resource.save();
+        console.log('New Resource Added:', resource);
+        res.status(201).json({ message: 'Resource added successfully', resource });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
-// Modify Resource
-router.put('/resources/:id', authenticateAdmin, (req, res) => {
+// Update Resource
+router.put('/resources/:id', authenticateAdmin, async (req, res) => {
     const { id } = req.params;
     const { name, url, category } = req.body;
-    // In a real app, update in database
-    console.log(`Resource ${id} Modified:`, { name, url, category });
-    res.json({ message: `Resource ${id} updated successfully`, resource: { id, name, url, category } });
+    
+    if (!name || !url || !category) {
+        return res.status(400).json({ message: 'Missing required fields' });
+    }
+
+    try {
+        const resource = await Resource.findByIdAndUpdate(id, { name, url, category }, { new: true });
+        if (!resource) {
+            return res.status(404).json({ message: 'Resource not found' });
+        }
+        console.log(`Resource ${id} Modified:`, resource);
+        res.json({ message: 'Resource updated successfully', resource });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
 });
 
+// Delete Resource
+router.delete('/resources/:id', authenticateAdmin, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const resource = await Resource.findByIdAndDelete(id);
+        if (!resource) {
+            return res.status(404).json({ message: 'Resource not found' });
+        }
+        console.log(`Resource ${id} Deleted:`, resource);
+        res.json({ message: 'Resource deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 module.exports = router;

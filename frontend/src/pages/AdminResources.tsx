@@ -8,7 +8,7 @@ import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 
 interface Resource {
-    id: string;
+    _id: string;
     name: string;
     url: string;
     category: string;
@@ -17,17 +17,42 @@ interface Resource {
 const AdminResources: React.FC = () => {
     const navigate = useNavigate();
     const [resources, setResources] = useState<Resource[]>([]);
-    const [form, setForm] = useState({ id: '', name: '', url: '', category: 'documentation' });
+    const [form, setForm] = useState({ _id: '', name: '', url: '', category: 'documentation' });
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
             navigate('/admin/login');
+            return;
         }
-        // In a real app, fetch existing resources here
+        fetchResources();
     }, [navigate]);
+
+    const fetchResources = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            setLoading(true);
+            const response = await fetch('http://localhost:3000/api/admin/resources', {
+                headers: {
+                    'Authorization': token,
+                },
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setResources(data.resources);
+            } else {
+                setError(data.message || 'Failed to fetch resources');
+            }
+        } catch (err) {
+            setError('Network error or server is down');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -49,8 +74,10 @@ const AdminResources: React.FC = () => {
             return;
         }
 
-        const url = form.id ? `http://localhost:3000/api/admin/resources/${form.id}` : 'http://localhost:3000/api/admin/resources';
-        const method = form.id ? 'PUT' : 'POST';
+        const url = form._id
+            ? `http://localhost:3000/api/admin/resources/${form._id}`
+            : 'http://localhost:3000/api/admin/resources';
+        const method = form._id ? 'PUT' : 'POST';
 
         try {
             const response = await fetch(url, {
@@ -59,15 +86,19 @@ const AdminResources: React.FC = () => {
                     'Content-Type': 'application/json',
                     'Authorization': token,
                 },
-                body: JSON.stringify(form),
+                body: JSON.stringify({
+                    name: form.name,
+                    url: form.url,
+                    category: form.category
+                }),
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 setMessage(data.message);
-                setForm({ id: '', name: '', url: '', category: 'documentation' }); // Clear form
-                // In a real app, refresh resources list
+                setForm({ _id: '', name: '', url: '', category: 'documentation' });
+                fetchResources(); // Refresh resources list
             } else {
                 setError(data.message || 'Operation failed');
             }
@@ -77,13 +108,48 @@ const AdminResources: React.FC = () => {
     };
 
     const handleEdit = (resource: Resource) => {
-        setForm(resource);
+        setForm({
+            _id: resource._id,
+            name: resource.name,
+            url: resource.url,
+            category: resource.category
+        });
     };
 
     const handleDelete = async (id: string) => {
-        // In a real app, implement DELETE request
-        setMessage(`Resource ${id} deleted (frontend simulation)`);
-        // In a real app, refresh resources list
+        const token = localStorage.getItem('token');
+        if (!token) {
+            setError('Authentication token missing.');
+            return;
+        }
+
+        if (!confirm('Are you sure you want to delete this resource?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3000/api/admin/resources/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': token,
+                },
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setMessage(data.message);
+                fetchResources(); // Refresh resources list
+            } else {
+                setError(data.message || 'Failed to delete resource');
+            }
+        } catch (err) {
+            setError('Network error or server is down');
+        }
+    };
+
+    const handleCancel = () => {
+        setForm({ _id: '', name: '', url: '', category: 'documentation' });
     };
 
     return (
@@ -132,9 +198,9 @@ const AdminResources: React.FC = () => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <Button type="submit">{form.id ? 'Update Resource' : 'Add Resource'}</Button>
-                        {form.id && (
-                            <Button variant="outline" onClick={() => setForm({ id: '', name: '', url: '', category: 'documentation' })}>
+                        <Button type="submit">{form._id ? 'Update Resource' : 'Add Resource'}</Button>
+                        {form._id && (
+                            <Button variant="outline" onClick={handleCancel} type="button">
                                 Cancel Edit
                             </Button>
                         )}
@@ -143,22 +209,31 @@ const AdminResources: React.FC = () => {
                     <Separator />
 
                     <h3 className="text-xl font-semibold">Existing Resources</h3>
-                    {resources.length === 0 ? (
+                    {loading ? (
+                        <p>Loading resources...</p>
+                    ) : resources.length === 0 ? (
                         <p>No resources added yet.</p>
                     ) : (
                         <div className="grid gap-4">
                             {resources.map((resource) => (
-                                <Card key={resource.id} className="p-4 flex justify-between items-center">
-                                    <div>
+                                <Card key={resource._id} className="p-4 flex justify-between items-center">
+                                    <div className="flex-1">
                                         <h4 className="font-semibold">{resource.name}</h4>
-                                        <p className="text-sm text-gray-500">Category: {resource.category}</p>
-                                        <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm">
+                                        <p className="text-xs font-semibold text-gray-500 mb-2">
+                                            {resource.category.toUpperCase()}
+                                        </p>
+                                        <a
+                                            href={resource.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-500 hover:underline text-sm break-all"
+                                        >
                                             {resource.url}
                                         </a>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 ml-4">
                                         <Button variant="outline" onClick={() => handleEdit(resource)}>Edit</Button>
-                                        <Button variant="destructive" onClick={() => handleDelete(resource.id)}>Delete</Button>
+                                        <Button variant="destructive" onClick={() => handleDelete(resource._id)}>Delete</Button>
                                     </div>
                                 </Card>
                             ))}

@@ -10,13 +10,16 @@ const Navigation = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [userRole, setUserRole] = useState('');
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     const email = localStorage.getItem('userEmail');
+    const role = localStorage.getItem('userRole');
     setIsLoggedIn(!!token);
     if (email) setUserEmail(email);
+    if (role) setUserRole(role);
   }, [location]);
 
   const handleLogout = () => {
@@ -91,8 +94,8 @@ const Navigation = () => {
             </Button>
             {isLoggedIn ? (
               <>
-                <Link to="/profile">
-                  <Button variant="outline">{userEmail}</Button>
+                <Link to={userRole === 'admin' ? '/admin/dashboard' : '/profile'}>
+                  <Button variant="outline">{userRole === 'admin' ? 'Dashboard' : userEmail}</Button>
                 </Link>
                 <Button onClick={handleLogout} variant="destructive">
                   Sign Out
@@ -141,9 +144,9 @@ const Navigation = () => {
             </Button>
             {isLoggedIn ? (
               <>
-                <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                <Link to={userRole === 'admin' ? '/admin/dashboard' : '/profile'} onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full">
-                    {userEmail}
+                    {userRole === 'admin' ? 'Dashboard' : userEmail}
                   </Button>
                 </Link>
                 <Button onClick={handleLogout} variant="destructive" className="w-full">
