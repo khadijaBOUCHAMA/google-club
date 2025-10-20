@@ -11,7 +11,7 @@ const AdminDashboard: React.FC = () => {
 
     useEffect(() => {
         const verifyAdmin = async () => {
-            const token = localStorage.getItem('adminToken');
+            const token = localStorage.getItem('token');
             if (!token) {
                 navigate('/admin/login');
                 return;
@@ -30,12 +30,12 @@ const AdminDashboard: React.FC = () => {
                     setAdminMessage(data.message);
                 } else {
                     setError(data.message || 'Failed to fetch admin data');
-                    localStorage.removeItem('adminToken');
+                    localStorage.removeItem('token');
                     navigate('/admin/login');
                 }
             } catch (err) {
                 setError('Network error or server is down');
-                localStorage.removeItem('adminToken');
+                localStorage.removeItem('token');
                 navigate('/admin/login');
             }
         };
@@ -44,7 +44,8 @@ const AdminDashboard: React.FC = () => {
     }, [navigate]);
 
     const handleLogout = () => {
-        localStorage.removeItem('adminToken');
+        localStorage.removeItem('token');
+        localStorage.removeItem('userRole');
         navigate('/admin/login');
     };
 

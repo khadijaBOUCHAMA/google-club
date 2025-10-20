@@ -1,11 +1,33 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Moon, Sun } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Navigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const { isDark, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const email = localStorage.getItem('userEmail');
+    setIsLoggedIn(!!token);
+    if (email) setUserEmail(email);
+  }, [location]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userEmail');
+    setIsLoggedIn(false);
+    setUserEmail('');
+    navigate('/');
+    setMobileMenuOpen(false);
+  };
 
   const navItems = [
     { path: "/", label: "Home" },
@@ -59,12 +81,28 @@ const Navigation = () => {
                 </Button>
               </Link>
             ))}
-            <Link to="/profile">
-              <Button variant="outline">Profile</Button>
-            </Link>
-            <Link to="/auth">
-              <Button>Sign In</Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="transition-smooth"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
+            {isLoggedIn ? (
+              <>
+                <Link to="/profile">
+                  <Button variant="outline">{userEmail}</Button>
+                </Link>
+                <Button onClick={handleLogout} variant="destructive">
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth">
+                <Button>Sign In</Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -93,14 +131,30 @@ const Navigation = () => {
                 </Button>
               </Link>
             ))}
-            <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
-              <Button variant="outline" className="w-full">
-                Profile
-              </Button>
-            </Link>
-            <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
-              <Button className="w-full">Sign In</Button>
-            </Link>
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={toggleTheme}
+            >
+              {isDark ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+              {isDark ? 'Light Mode' : 'Dark Mode'}
+            </Button>
+            {isLoggedIn ? (
+              <>
+                <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    {userEmail}
+                  </Button>
+                </Link>
+                <Button onClick={handleLogout} variant="destructive" className="w-full">
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth" onClick={() => setMobileMenuOpen(false)}>
+                <Button className="w-full">Sign In</Button>
+              </Link>
+            )}
           </div>
         )}
       </div>

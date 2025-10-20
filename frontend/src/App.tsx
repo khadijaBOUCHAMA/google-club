@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import Navigation from "./components/Navigation";
 import { Chatbot } from "./components/Chatbot";
 import Home from "./pages/Home";
@@ -24,37 +25,39 @@ import ProtectedRoute from "./components/ProtectedRoute"; // Import ProtectedRou
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/ideas" element={<IdeaWall />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/resources" element={<Resources />} />
-          <Route path="/contact" element={<Contact />} />
-          {/* Admin Login Route (not protected) */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          {/* Protected Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/events" element={<AdminEvents />} />
-            <Route path="/admin/notifications" element={<AdminNotifications />} />
-            <Route path="/admin/resources" element={<AdminResources />} />
-          </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Chatbot />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ThemeProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Navigation />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/ideas" element={<IdeaWall />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/contact" element={<Contact />} />
+            {/* Admin Login Route (not protected) */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            {/* Protected Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/events" element={<AdminEvents />} />
+              <Route path="/admin/notifications" element={<AdminNotifications />} />
+              <Route path="/admin/resources" element={<AdminResources />} />
+            </Route>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <Chatbot />
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

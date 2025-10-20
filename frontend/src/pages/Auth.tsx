@@ -32,6 +32,7 @@ const Auth = () => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.role);
+        localStorage.setItem('userEmail', signinEmail);
         toast({
           title: "Success",
           description: "Logged in successfully!",
@@ -74,6 +75,7 @@ const Auth = () => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userRole', data.role);
+        localStorage.setItem('userEmail', signupEmail);
         toast({
           title: "Success",
           description: "Account created and logged in!",

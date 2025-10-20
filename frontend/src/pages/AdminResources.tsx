@@ -22,7 +22,7 @@ const AdminResources: React.FC = () => {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        const token = localStorage.getItem('adminToken');
+        const token = localStorage.getItem('token');
         if (!token) {
             navigate('/admin/login');
         }
@@ -42,7 +42,7 @@ const AdminResources: React.FC = () => {
         setError('');
         setMessage('');
 
-        const token = localStorage.getItem('adminToken');
+        const token = localStorage.getItem('token');
         if (!token) {
             setError('Authentication token missing.');
             navigate('/admin/login');

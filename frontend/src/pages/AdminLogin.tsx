@@ -30,6 +30,7 @@ const AdminLogin: React.FC = () => {
                 if (data.role === 'admin') {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('userRole', data.role);
+                    localStorage.setItem('userEmail', email);
                     navigate('/admin/dashboard');
                 } else {
                     setError('Unauthorized: Not an admin');
