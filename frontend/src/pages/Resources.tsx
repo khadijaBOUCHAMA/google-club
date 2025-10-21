@@ -196,6 +196,20 @@ const Resources = () => {
     }
   };
 
+  const handleView = (resource: Resource) => {
+    if (resource.url) {
+      window.open(resource.url, '_blank');
+    } else if (resource.filePath) {
+      // For files, try to open in new tab if it's viewable
+      const viewableTypes = ['application/pdf', 'text/plain', 'image/jpeg', 'image/png', 'image/gif'];
+      if (resource.mimeType && viewableTypes.includes(resource.mimeType)) {
+        window.open(`http://localhost:3000/uploads/${resource.filePath.split('/').pop()}`, '_blank');
+      } else {
+        handleDownload(resource);
+      }
+    }
+  };
+
   const formatFileSize = (bytes?: number) => {
     if (!bytes) return '';
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
@@ -264,7 +278,7 @@ const Resources = () => {
                           <Download className="h-4 w-4" />
                         </Button>
                       ) : (
-                        <Button size="sm">
+                        <Button size="sm" onClick={() => handleView(resource)}>
                           <ExternalLink className="h-4 w-4 mr-1" />
                           View
                         </Button>
