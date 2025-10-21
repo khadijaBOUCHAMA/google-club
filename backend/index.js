@@ -6,6 +6,8 @@ const adminRoutes = require('./admin/admin'); // Import admin routes
 const authRoutes = require('./routes/auth'); // Import auth routes
 const ideaRoutes = require('./routes/ideas'); // Import idea routes
 const contactRoutes = require('./routes/contact'); // Import contact routes
+const eventRoutes = require('./routes/events'); // Import event routes
+const notificationRoutes = require('./routes/notifications'); // Import notification routes
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,6 +30,10 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/ideas', ideaRoutes);
 // Use contact routes
 app.use('/api/contact', contactRoutes);
+// Use event routes
+app.use('/api/events', eventRoutes);
+// Use notification routes
+app.use('/api/notifications', notificationRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {
