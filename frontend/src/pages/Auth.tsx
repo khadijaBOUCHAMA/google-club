@@ -37,11 +37,7 @@ const Auth = () => {
           title: "Success",
           description: "Logged in successfully!",
         });
-        if (data.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/profile'); // Or wherever regular users go
-        }
+        navigate('/'); // Redirect to home page after login
       } else {
         toast({
           title: "Error",

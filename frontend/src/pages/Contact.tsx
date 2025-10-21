@@ -6,9 +6,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin, Phone, Send } from "lucide-react";
 
 const Contact = () => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form submission logic will be added
+    const formData = new FormData(e.target as HTMLFormElement);
+    const data = {
+      name: formData.get('name'),
+      email: formData.get('email'),
+      subject: formData.get('subject'),
+      message: formData.get('message')
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        alert('Message sent successfully! We will get back to you soon.');
+        (e.target as HTMLFormElement).reset();
+      } else {
+        alert('Failed to send message. Please try again.');
+      }
+    } catch (error) {
+      alert('Network error. Please try again later.');
+    }
   };
 
   return (

@@ -110,8 +110,39 @@ const sendNotificationEmail = async (emails, message, type) => {
     }
 };
 
+const sendContactEmail = async (name, email, subject, message) => {
+    try {
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER, // Send to admin email
+            subject: `Contact Form: ${subject}`,
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h2 style="color: #4285f4;">New Contact Form Message</h2>
+                    <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                        <p><strong>From:</strong> ${name} (${email})</p>
+                        <p><strong>Subject:</strong> ${subject}</p>
+                        <p><strong>Message:</strong></p>
+                        <p style="white-space: pre-wrap;">${message}</p>
+                    </div>
+                    <p>You can reply directly to this email to respond to the sender.</p>
+                    <br>
+                    <p>Best regards,<br>Google Club Contact System</p>
+                </div>
+            `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Contact email sent to admin');
+    } catch (error) {
+        console.error('Error sending contact email:', error);
+        throw error;
+    }
+};
+
 module.exports = {
     sendWelcomeEmail,
     sendEventRegistrationEmail,
-    sendNotificationEmail
+    sendNotificationEmail,
+    sendContactEmail
 };
