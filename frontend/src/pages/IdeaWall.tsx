@@ -92,6 +92,47 @@ const IdeaWall = () => {
     }
   };
 
+  const handleLike = async (ideaId) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to like ideas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // For now, just update local state. In a full implementation, you'd have a backend endpoint
+      setIdeas(ideas.map(idea =>
+        idea._id === ideaId
+          ? { ...idea, likes: [...(idea.likes || []), { _id: 'temp' }] } // Simple increment
+          : idea
+      ));
+
+      toast({
+        title: "Liked!",
+        description: "You liked this idea.",
+      });
+    } catch (error) {
+      console.error('Error liking idea:', error);
+      toast({
+        title: "Error",
+        description: "Failed to like idea.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleComment = async (ideaId) => {
+    // For now, just show a toast. In a full implementation, you'd open a comment dialog
+    toast({
+      title: "Comments",
+      description: "Comment feature coming soon!",
+    });
+  };
+
   return (
     <div className="min-h-screen py-12 px-4">
       <div className="container mx-auto max-w-4xl">
@@ -177,11 +218,19 @@ const IdeaWall = () => {
                       by {idea.author?.email || 'Anonymous'}
                     </p>
                     <div className="flex items-center gap-4">
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleLike(idea._id)}
+                      >
                         <ThumbsUp className="h-4 w-4 mr-1" />
                         {idea.likes?.length || 0}
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleComment(idea._id)}
+                      >
                         <MessageSquare className="h-4 w-4 mr-1" />
                         {idea.comments?.length || 0}
                       </Button>

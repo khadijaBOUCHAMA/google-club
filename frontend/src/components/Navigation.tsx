@@ -48,18 +48,7 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center space-x-2">
-            <svg className="h-10 w-10" viewBox="0 0 40 40" fill="none">
-              <rect x="2" y="2" width="36" height="36" rx="8" fill="url(#logo-gradient)" />
-              <text x="20" y="27" fontFamily="Arial, sans-serif" fontSize="24" fontWeight="bold" fill="white" textAnchor="middle">G</text>
-              <defs>
-                <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="hsl(217 89% 61%)" />
-                  <stop offset="33%" stopColor="hsl(142 76% 36%)" />
-                  <stop offset="66%" stopColor="hsl(45 100% 51%)" />
-                  <stop offset="100%" stopColor="hsl(4 90% 58%)" />
-                </linearGradient>
-              </defs>
-            </svg>
+            <img src="/logo/google club.png" alt="Google Club Logo" className="h-10 w-auto" />
             <span className="text-xl font-bold">
               <span className="text-primary">G</span>
               <span className="text-secondary">O</span>

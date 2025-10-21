@@ -28,6 +28,22 @@ router.post('/', authenticateToken, async (req, res) => {
 
         const savedIdea = await idea.save();
         await savedIdea.populate('author', 'email');
+
+        // Create notification for new idea
+        const Notification = require('../models/Notification');
+        const users = await User.find({ _id: { $ne: req.user.id } }); // All users except the author
+
+        for (const user of users) {
+            const notification = new Notification({
+                user: user._id,
+                type: 'idea',
+                title: 'New Idea Posted',
+                message: `${req.user.email} shared a new idea: "${title}"`,
+                data: { ideaId: savedIdea._id }
+            });
+            await notification.save();
+        }
+
         res.status(201).json(savedIdea);
     } catch (error) {
         res.status(400).json({ message: error.message });

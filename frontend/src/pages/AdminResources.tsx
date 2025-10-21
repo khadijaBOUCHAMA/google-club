@@ -6,21 +6,38 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Separator } from '../components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Upload, Download, ExternalLink } from 'lucide-react';
 
 interface Resource {
     _id: string;
     name: string;
-    url: string;
+    url?: string;
+    filePath?: string;
+    fileName?: string;
+    fileSize?: number;
+    mimeType?: string;
     category: string;
+    uploadedBy: {
+        _id: string;
+        email: string;
+    };
+    createdAt: string;
 }
 
 const AdminResources: React.FC = () => {
     const navigate = useNavigate();
     const [resources, setResources] = useState<Resource[]>([]);
-    const [form, setForm] = useState({ _id: '', name: '', url: '', category: 'documentation' });
+    const [form, setForm] = useState({
+        _id: '',
+        name: '',
+        url: '',
+        category: 'documentation',
+        file: null as File | null
+    });
     const [error, setError] = useState('');
     const [message, setMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [uploadType, setUploadType] = useState<'url' | 'file'>('url');
 
     useEffect(() => {
         const token = localStorage.getItem('token');
@@ -58,6 +75,11 @@ const AdminResources: React.FC = () => {
         setForm({ ...form, [e.target.name]: e.target.value });
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0] || null;
+        setForm({ ...form, file });
+    };
+
     const handleSelectChange = (value: string) => {
         setForm({ ...form, category: value });
     };
@@ -74,30 +96,57 @@ const AdminResources: React.FC = () => {
             return;
         }
 
+        if (!form.name || !form.category) {
+            setError('Name and category are required');
+            return;
+        }
+
+        if (uploadType === 'url' && !form.url) {
+            setError('URL is required when uploading via URL');
+            return;
+        }
+
+        if (uploadType === 'file' && !form.file) {
+            setError('File is required when uploading a file');
+            return;
+        }
+
         const url = form._id
             ? `http://localhost:3000/api/admin/resources/${form._id}`
             : 'http://localhost:3000/api/admin/resources';
         const method = form._id ? 'PUT' : 'POST';
 
         try {
+            const formData = new FormData();
+            formData.append('name', form.name);
+            formData.append('category', form.category);
+
+            if (uploadType === 'url') {
+                formData.append('url', form.url);
+            } else if (form.file) {
+                formData.append('file', form.file);
+            }
+
             const response = await fetch(url, {
                 method,
                 headers: {
-                    'Content-Type': 'application/json',
                     'Authorization': token,
                 },
-                body: JSON.stringify({
-                    name: form.name,
-                    url: form.url,
-                    category: form.category
-                }),
+                body: formData,
             });
 
             const data = await response.json();
 
             if (response.ok) {
                 setMessage(data.message);
-                setForm({ _id: '', name: '', url: '', category: 'documentation' });
+                setForm({
+                    _id: '',
+                    name: '',
+                    url: '',
+                    category: 'documentation',
+                    file: null
+                });
+                setUploadType('url');
                 fetchResources(); // Refresh resources list
             } else {
                 setError(data.message || 'Operation failed');
@@ -111,9 +160,11 @@ const AdminResources: React.FC = () => {
         setForm({
             _id: resource._id,
             name: resource.name,
-            url: resource.url,
-            category: resource.category
+            url: resource.url || '',
+            category: resource.category,
+            file: null
         });
+        setUploadType(resource.url ? 'url' : 'file');
     };
 
     const handleDelete = async (id: string) => {
@@ -148,8 +199,51 @@ const AdminResources: React.FC = () => {
         }
     };
 
+    const handleDownload = async (resource: Resource) => {
+        if (!resource.filePath) return;
+
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch(`http://localhost:3000/api/admin/resources/${resource._id}/download`, {
+                headers: {
+                    'Authorization': token,
+                },
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = resource.fileName || resource.name;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } else {
+                setError('Failed to download file');
+            }
+        } catch (err) {
+            setError('Network error during download');
+        }
+    };
+
     const handleCancel = () => {
-        setForm({ _id: '', name: '', url: '', category: 'documentation' });
+        setForm({
+            _id: '',
+            name: '',
+            url: '',
+            category: 'documentation',
+            file: null
+        });
+        setUploadType('url');
+    };
+
+    const formatFileSize = (bytes?: number) => {
+        if (!bytes) return '';
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
     };
 
     return (
@@ -162,6 +256,21 @@ const AdminResources: React.FC = () => {
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     {message && <p className="text-green-600 text-sm">{message}</p>}
 
+                    <div className="flex gap-4 mb-4">
+                        <Button
+                            variant={uploadType === 'url' ? 'default' : 'outline'}
+                            onClick={() => setUploadType('url')}
+                        >
+                            Upload via URL
+                        </Button>
+                        <Button
+                            variant={uploadType === 'file' ? 'default' : 'outline'}
+                            onClick={() => setUploadType('file')}
+                        >
+                            Upload File
+                        </Button>
+                    </div>
+
                     <form onSubmit={handleSubmit} className="grid gap-4">
                         <div className="grid gap-2">
                             <Label htmlFor="name">Resource Name</Label>
@@ -173,17 +282,38 @@ const AdminResources: React.FC = () => {
                                 required
                             />
                         </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="url">URL</Label>
-                            <Input
-                                id="url"
-                                name="url"
-                                type="url"
-                                value={form.url}
-                                onChange={handleChange}
-                                required
-                            />
-                        </div>
+
+                        {uploadType === 'url' ? (
+                            <div className="grid gap-2">
+                                <Label htmlFor="url">URL</Label>
+                                <Input
+                                    id="url"
+                                    name="url"
+                                    type="url"
+                                    value={form.url}
+                                    onChange={handleChange}
+                                    required
+                                />
+                            </div>
+                        ) : (
+                            <div className="grid gap-2">
+                                <Label htmlFor="file">File</Label>
+                                <Input
+                                    id="file"
+                                    name="file"
+                                    type="file"
+                                    onChange={handleFileChange}
+                                    accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.zip,.rar"
+                                    required={!form._id}
+                                />
+                                {form.file && (
+                                    <p className="text-sm text-gray-600">
+                                        Selected: {form.file.name} ({formatFileSize(form.file.size)})
+                                    </p>
+                                )}
+                            </div>
+                        )}
+
                         <div className="grid gap-2">
                             <Label htmlFor="category">Category</Label>
                             <Select value={form.category} onValueChange={handleSelectChange}>
@@ -222,16 +352,41 @@ const AdminResources: React.FC = () => {
                                         <p className="text-xs font-semibold text-gray-500 mb-2">
                                             {resource.category.toUpperCase()}
                                         </p>
-                                        <a
-                                            href={resource.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-blue-500 hover:underline text-sm break-all"
-                                        >
-                                            {resource.url}
-                                        </a>
+                                        {resource.url ? (
+                                            <a
+                                                href={resource.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-500 hover:underline text-sm flex items-center gap-1"
+                                            >
+                                                <ExternalLink className="h-3 w-3" />
+                                                {resource.url}
+                                            </a>
+                                        ) : resource.fileName ? (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Upload className="h-3 w-3" />
+                                                <span>{resource.fileName}</span>
+                                                {resource.fileSize && (
+                                                    <span className="text-gray-500">
+                                                        ({formatFileSize(resource.fileSize)})
+                                                    </span>
+                                                )}
+                                            </div>
+                                        ) : null}
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Uploaded by: {resource.uploadedBy.email}
+                                        </p>
                                     </div>
                                     <div className="flex gap-2 ml-4">
+                                        {resource.filePath && (
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => handleDownload(resource)}
+                                            >
+                                                <Download className="h-4 w-4" />
+                                            </Button>
+                                        )}
                                         <Button variant="outline" onClick={() => handleEdit(resource)}>Edit</Button>
                                         <Button variant="destructive" onClick={() => handleDelete(resource._id)}>Delete</Button>
                                     </div>

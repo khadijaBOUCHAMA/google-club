@@ -78,6 +78,98 @@ const Home = () => {
       </section>
 
       {/* Collaborators Section */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="container mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            Club Collaborators
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                id: 1,
+                name: "Sarah Chen",
+                role: "AI/ML Lead",
+                bio: "Passionate about machine learning and AI applications. Leading multiple projects in computer vision and natural language processing.",
+                ideas: ["AI-Powered Study Assistant", "Smart Campus Navigation"],
+                resources: ["Machine Learning Crash Course", "TensorFlow 2.0 Complete Course"]
+              },
+              {
+                id: 2,
+                name: "Mike Johnson",
+                role: "Web Development Lead",
+                bio: "Full-stack developer with expertise in React, Node.js, and cloud technologies. Loves building scalable web applications.",
+                ideas: ["Campus Event App", "Sustainability Tracker"],
+                resources: ["Web Development Best Practices", "Google Cloud Architecture Framework"]
+              },
+              {
+                id: 3,
+                name: "Emma Wilson",
+                role: "Mobile Development Lead",
+                bio: "Android and iOS developer passionate about creating intuitive mobile experiences. Expert in Flutter and React Native.",
+                ideas: ["Campus Event App", "Smart Campus Navigation"],
+                resources: ["Android Development Fundamentals", "Web Development Best Practices"]
+              }
+            ].map((collaborator) => (
+              <Dialog key={collaborator.id}>
+                <DialogTrigger asChild>
+                  <Card className="p-6 hover:shadow-google transition-smooth cursor-pointer">
+                    <div className="text-center">
+                      <div className="h-16 w-16 rounded-full bg-gradient-google flex items-center justify-center mx-auto mb-4">
+                        <Users className="h-8 w-8 text-white" />
+                      </div>
+                      <h3 className="text-xl font-semibold mb-1">{collaborator.name}</h3>
+                      <p className="text-primary font-medium mb-2">{collaborator.role}</p>
+                      <p className="text-muted-foreground text-sm line-clamp-3">
+                        {collaborator.bio}
+                      </p>
+                    </div>
+                  </Card>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl">{collaborator.name}</DialogTitle>
+                    <DialogDescription className="text-lg text-primary">
+                      {collaborator.role}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="font-semibold mb-2">About</h4>
+                      <p className="text-muted-foreground">{collaborator.bio}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-3">Ideas Shared</h4>
+                      <div className="space-y-2">
+                        {collaborator.ideas.map((idea, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Lightbulb className="h-4 w-4 text-accent" />
+                            <span className="text-sm">{idea}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-3">Resources Published</h4>
+                      <div className="space-y-2">
+                        {collaborator.resources.map((resource, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Rocket className="h-4 w-4 text-secondary" />
+                            <span className="text-sm">{resource}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Collaborators Section */}
       <section className="py-16 px-4">
         <div className="container mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">

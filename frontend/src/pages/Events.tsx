@@ -1,55 +1,78 @@
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users, Clock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Events = () => {
-  const events = [
-    {
-      id: 1,
-      title: "AI Workshop: Introduction to Machine Learning",
-      date: "2025-11-15",
-      time: "14:00 - 17:00",
-      location: "Tech Hub, Room 301",
-      attendees: 45,
-      maxAttendees: 50,
-      category: "Workshop",
-      color: "primary",
-    },
-    {
-      id: 2,
-      title: "Hackathon 2025: Build the Future",
-      date: "2025-11-22",
-      time: "09:00 - 21:00",
-      location: "Innovation Center",
-      attendees: 120,
-      maxAttendees: 150,
-      category: "Hackathon",
-      color: "secondary",
-    },
-    {
-      id: 3,
-      title: "Google Cloud Platform Deep Dive",
-      date: "2025-11-28",
-      time: "15:00 - 18:00",
-      location: "Virtual Event",
-      attendees: 200,
-      maxAttendees: 300,
-      category: "Tech Talk",
-      color: "accent",
-    },
-    {
-      id: 4,
-      title: "Networking Meetup: Connect & Collaborate",
-      date: "2025-12-05",
-      time: "18:00 - 20:00",
-      location: "Campus Café",
-      attendees: 30,
-      maxAttendees: 40,
-      category: "Networking",
-      color: "success",
-    },
-  ];
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/events');
+      const data = await response.json();
+      setEvents(data);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load events",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegister = async (eventId, eventTitle, eventDate) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please login to register for events",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/events/${eventId}/register`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Registration Successful",
+          description: "You have been registered for the event. Check your email for confirmation.",
+        });
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Registration Failed",
+          description: error.message || "Failed to register for event",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to register for event",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen py-12 px-4">
@@ -102,7 +125,12 @@ const Events = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button className="flex-1">Register Now</Button>
+                <Button
+                  className="flex-1"
+                  onClick={() => handleRegister(event._id, event.title, event.date)}
+                >
+                  Register Now
+                </Button>
                 <Button variant="outline">Details</Button>
               </div>
             </Card>

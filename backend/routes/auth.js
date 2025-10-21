@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { sendWelcomeEmail } = require('../utils/emailService');
 
 // Register User
 router.post('/register', async (req, res) => {
@@ -21,6 +22,9 @@ router.post('/register', async (req, res) => {
         });
 
         await user.save();
+
+        // Send welcome email
+        await sendWelcomeEmail(user.email, user.email.split('@')[0]);
 
         const token = jwt.sign({ id: user._id, email: user.email, role: user.role }, 'supersecretkey', { expiresIn: '1h' });
         res.status(201).json({ message: 'User registered successfully', token, role: user.role });

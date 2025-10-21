@@ -1,59 +1,94 @@
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Bell, Calendar, Lightbulb, Users, Check } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Notifications = () => {
-  const notifications = [
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('http://localhost:3000/api/notifications', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNotifications(data);
+      } else {
+        // Fallback to mock data if API fails
+        setNotifications(mockNotifications);
+      }
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+      // Fallback to mock data
+      setNotifications(mockNotifications);
+      toast({
+        title: "Error",
+        description: "Failed to load notifications, showing demo data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mockNotifications = [
     {
-      id: 1,
+      _id: 1,
       type: "event",
-      icon: Calendar,
       title: "New Event: AI Workshop Tomorrow",
-      description: "Don't forget! AI Workshop starts at 2 PM in Tech Hub",
-      time: "2 hours ago",
-      unread: true,
-      color: "primary",
+      message: "Don't forget! AI Workshop starts at 2 PM in Tech Hub",
+      read: false,
+      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
     },
     {
-      id: 2,
+      _id: 2,
       type: "idea",
-      icon: Lightbulb,
       title: "Your idea received 10 new likes",
-      description: "AI-Powered Study Assistant is getting popular!",
-      time: "5 hours ago",
-      unread: true,
-      color: "accent",
+      message: "AI-Powered Study Assistant is getting popular!",
+      read: false,
+      createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
     },
     {
-      id: 3,
-      type: "community",
-      icon: Users,
+      _id: 3,
+      type: "admin",
       title: "5 new members joined Google Club",
-      description: "Welcome our newest members to the community",
-      time: "1 day ago",
-      unread: false,
-      color: "success",
+      message: "Welcome our newest members to the community",
+      read: true,
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
     },
     {
-      id: 4,
+      _id: 4,
       type: "event",
-      icon: Calendar,
       title: "Event Registration Confirmed",
-      description: "You're registered for Hackathon 2025",
-      time: "2 days ago",
-      unread: false,
-      color: "primary",
+      message: "You're registered for Hackathon 2025",
+      read: true,
+      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
     },
     {
-      id: 5,
+      _id: 5,
       type: "idea",
-      icon: Lightbulb,
       title: "New comment on your idea",
-      description: "Emma Wilson commented on Campus Event App",
-      time: "3 days ago",
-      unread: false,
-      color: "accent",
+      message: "Emma Wilson commented on Campus Event App",
+      read: true,
+      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
     },
   ];
 
@@ -80,37 +115,93 @@ const Notifications = () => {
               View All Your Activity Updates
             </p>
           </div>
-          <Button variant="outline">
+          <Button
+            variant="outline"
+            onClick={async () => {
+              const token = localStorage.getItem('token');
+              if (!token) return;
+
+              try {
+                await fetch('http://localhost:3000/api/notifications/read-all', {
+                  method: 'PUT',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                  },
+                });
+                // Refresh notifications
+                fetchNotifications();
+                toast({
+                  title: "Success",
+                  description: "All notifications marked as read",
+                });
+              } catch (error) {
+                console.error('Error marking all read:', error);
+                toast({
+                  title: "Error",
+                  description: "Failed to mark notifications as read",
+                  variant: "destructive",
+                });
+              }
+            }}
+          >
             <Check className="h-4 w-4 mr-2" />
             Mark All Read
           </Button>
         </div>
 
         <div className="space-y-3">
-          {notifications.map((notification) => {
-            const Icon = notification.icon;
+          {(notifications.length > 0 ? notifications : mockNotifications).map((notification) => {
+            const getIcon = (type) => {
+              switch (type) {
+                case 'event':
+                  return Calendar;
+                case 'idea':
+                  return Lightbulb;
+                case 'admin':
+                  return Users;
+                default:
+                  return Bell;
+              }
+            };
+
+            const getColor = (type) => {
+              switch (type) {
+                case 'event':
+                  return 'primary';
+                case 'idea':
+                  return 'accent';
+                case 'admin':
+                  return 'success';
+                default:
+                  return 'foreground';
+              }
+            };
+
+            const Icon = getIcon(notification.type);
+            const color = getColor(notification.type);
+            const isUnread = !notification.read;
+            const timeAgo = new Date(notification.createdAt).toLocaleString();
+
             return (
               <Card
-                key={notification.id}
-                className={`p-4 transition-smooth hover:shadow-card ${
-                  notification.unread ? "border-l-4 border-l-primary" : ""
-                }`}
+                key={notification._id}
+                className={`p-4 transition-smooth hover:shadow-card ${isUnread ? "border-l-4 border-l-primary" : ""
+                  }`}
               >
                 <div className="flex items-start gap-4">
                   <div
-                    className={`h-10 w-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ${
-                      notification.unread ? "bg-primary/10" : ""
-                    }`}
+                    className={`h-10 w-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 ${isUnread ? "bg-primary/10" : ""
+                      }`}
                   >
                     <Icon
-                      className={`h-5 w-5 ${getIconColor(notification.color)}`}
+                      className={`h-5 w-5 ${getIconColor(color)}`}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 mb-1">
                       <h3 className="font-semibold">
                         {notification.title}
-                        {notification.unread && (
+                        {isUnread && (
                           <Badge variant="default" className="ml-2 text-xs">
                             New
                           </Badge>
@@ -118,10 +209,10 @@ const Notifications = () => {
                       </h3>
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">
-                      {notification.description}
+                      {notification.message}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {notification.time}
+                      {timeAgo}
                     </p>
                   </div>
                 </div>
