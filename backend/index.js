@@ -18,7 +18,7 @@ mongoose.connect(MONGODB_URI)
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/uploads', express.static('backend/uploads')); // Serve uploaded files
+app.use('/uploads', express.static('./uploads')); // Serve uploaded files
 
 // Use auth routes
 app.use('/api/auth', authRoutes);
