@@ -54,7 +54,7 @@ const AdminResources: React.FC = () => {
             setLoading(true);
             const response = await fetch('http://localhost:3000/api/admin/resources', {
                 headers: {
-                    'Authorization': token,
+                    Authorization: `Bearer ${token}`,
                 },
             });
 

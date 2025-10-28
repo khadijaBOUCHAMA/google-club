@@ -1,36 +1,54 @@
 const mongoose = require('mongoose');
 
-const IdeaSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true,
-        trim: true
+const commentSchema = new mongoose.Schema(
+    {
+        author: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        text: {
+            type: String,
+            required: true,
+            trim: true,
+        },
     },
-    description: {
-        type: String,
-        required: true
+    { timestamps: true }
+);
+
+const IdeaSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        description: {
+            type: String,
+            required: true,
+        },
+        author: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        tags: [
+            {
+                type: String,
+                trim: true,
+            },
+        ],
+        likes: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User',
+            },
+        ],
+        comments: [commentSchema],
     },
-    author: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-    tags: [{
-        type: String,
-        trim: true
-    }],
-    likes: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    }],
-    comments: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Comment'
-    }],
-    createdAt: {
-        type: Date,
-        default: Date.now
+    {
+        timestamps: true,
     }
-});
+);
 
 module.exports = mongoose.model('Idea', IdeaSchema);

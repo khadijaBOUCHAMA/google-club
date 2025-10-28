@@ -39,9 +39,9 @@ const IdeaWall = () => {
     }
   };
 
-  const handleSubmitIdea = async (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
+  const handleSubmitIdea = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     const title = formData.get('title');
     const description = formData.get('description');
     const tags = formData.get('tags');
@@ -61,32 +61,92 @@ const IdeaWall = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ title, description, tags }),
       });
 
-      if (response.ok) {
-        const newIdea = await response.json();
-        setIdeas([newIdea, ...ideas]);
-        toast({
-          title: "Idea Shared!",
-          description: "Your idea has been posted successfully.",
-        });
-        e.target.reset();
-      } else {
+      if (!response.ok) {
         const error = await response.json();
         toast({
           title: "Error",
           description: error.message || "Failed to share idea.",
           variant: "destructive",
         });
+        return;
       }
+
+      await fetchIdeas();
+      toast({
+        title: "Idea Shared!",
+        description: "Your idea has been posted successfully.",
+      });
+      event.currentTarget.reset();
     } catch (error) {
       console.error('Error submitting idea:', error);
       toast({
         title: "Error",
         description: "Failed to share idea. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddComment = async (event, ideaId) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const text = formData.get('comment')?.toString().trim();
+
+    if (!text) {
+      toast({
+        title: "Comment Required",
+        description: "Please write something before submitting.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to comment on ideas.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/ideas/${ideaId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        toast({
+          title: "Error",
+          description: error.message || "Failed to add comment.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await fetchIdeas();
+      event.currentTarget.reset();
+      toast({
+        title: "Comment added",
+        description: "Thanks for sharing your thoughts!",
+      });
+    } catch (error) {
+      console.error('Error adding comment:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add comment. Please try again.",
         variant: "destructive",
       });
     }
@@ -196,7 +256,7 @@ const IdeaWall = () => {
 
         <div className="space-y-6">
           {ideas.map((idea) => (
-            <Card key={idea.id} className="p-6 hover:shadow-google transition-smooth">
+            <Card key={idea._id} className="p-6 hover:shadow-google transition-smooth">
               <div className="flex items-start gap-4">
                 <div className="h-12 w-12 rounded-lg bg-gradient-google flex items-center justify-center flex-shrink-0">
                   <Lightbulb className="h-6 w-6 text-white" />
@@ -207,7 +267,7 @@ const IdeaWall = () => {
                     {idea.description}
                   </p>
                   <div className="flex flex-wrap items-center gap-3 mb-4">
-                    {idea.tags.map((tag) => (
+                    {idea.tags?.map((tag) => (
                       <Badge key={tag} variant="secondary">
                         {tag}
                       </Badge>
@@ -236,6 +296,43 @@ const IdeaWall = () => {
                       </Button>
                     </div>
                   </div>
+
+                  {idea.comments?.length ? (
+                    <div className="mt-4 space-y-3">
+                      <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                        Comments
+                      </h4>
+                      <div className="space-y-3">
+                        {idea.comments.map((comment) => (
+                          <div key={comment._id} className="rounded-md bg-muted p-3">
+                            <p className="text-sm text-muted-foreground mb-1">
+                              {comment.author?.email || 'User'} —
+                              {comment.createdAt ? ` ${new Date(comment.createdAt).toLocaleString()}` : ''}
+                            </p>
+                            <p>{comment.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  <form
+                    className="mt-4 space-y-2"
+                    onSubmit={(event) => handleAddComment(event, idea._id)}
+                  >
+                    <Textarea
+                      name="comment"
+                      placeholder="Share your thoughts..."
+                      rows={3}
+                      required
+                      defaultValue=""
+                    />
+                    <div className="flex justify-end">
+                      <Button type="submit" size="sm">
+                        Add Comment
+                      </Button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </Card>
